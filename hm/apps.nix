@@ -36,6 +36,7 @@ in
     nomacs                    # Qt-based image viewer
     pciutils                  # Collection of programs for inspecting and manipulating configuration of PCI devices
     progress                  # Tool that shows the progress of coreutils programs
+    smartmontools             # Tools for monitoring the health of hard drives
     speedtest-cli             # Command line interface for testing internet bandwidth using speedtest.net
     unrar                     # Utility for RAR archives
     unzip                     # Extraction utility for archives compressed in .zip format

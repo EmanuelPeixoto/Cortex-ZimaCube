@@ -6,12 +6,17 @@
     ./php.nix
   ];
 
+  systemd.tmpfiles.rules = [
+    "d /mnt/nextcloud/nextcloud-data 0750 nextcloud nextcloud -"
+  ];
+
   services.nextcloud = {
     enable = true;
     #https = true;
     hostName = "${config.networking.hostName}.local";
     package = pkgs.nextcloud31;
     maxUploadSize = "16384M";
+    datadir = "/mnt/nextcloud/nextcloud-data";
 
     settings = {
       autoUpdateApps.enable = true;

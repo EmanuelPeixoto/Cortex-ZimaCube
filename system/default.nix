@@ -10,11 +10,13 @@
     ./locale.nix
     ./nextcloud
     ./nvidia.nix
+    ./smartd.nix
     ./sound.nix
     ./ssh.nix
     ./users.nix
     ./web
     ./xserver.nix
+    ./zfs.nix
   ];
 
   # Hostname

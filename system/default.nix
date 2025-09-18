@@ -9,9 +9,10 @@
     ./hardware-configuration.nix
     ./locale.nix
     ./nextcloud
+    ./ngrok.nix
     ./nvidia.nix
-    ./smartd.nix
     ./rstudio.nix
+    ./smartd.nix
     ./sound.nix
     ./ssh.nix
     ./users.nix

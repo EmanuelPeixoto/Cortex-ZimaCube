@@ -7,6 +7,6 @@
       addresses = true;
       workstation = true;
     };
-    wideArea = false;
+    wideArea = true;
   };
 }

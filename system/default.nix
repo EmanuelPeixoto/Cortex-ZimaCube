@@ -11,6 +11,7 @@
     ./nextcloud
     ./nvidia.nix
     ./smartd.nix
+    ./rstudio.nix
     ./sound.nix
     ./ssh.nix
     ./users.nix
@@ -33,6 +34,7 @@
 
   programs = {
     dconf.enable = true;
+    fish.enable = true;
     zsh.enable = true;
   };
 

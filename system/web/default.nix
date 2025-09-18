@@ -1,8 +1,9 @@
 {
   imports = [
-    ./acme.nix
+    # ./acme.nix
     ./catch-all.nix
     ./nextcloud.nix
+    ./rstudio.nix
   ];
   services.nginx = {
     enable = true;
@@ -27,6 +28,8 @@
       client_body_buffer_size 128k;
       client_header_buffer_size 4k;
       large_client_header_buffers 4 16k;
+      proxy_headers_hash_max_size 1024;
+      proxy_headers_hash_bucket_size 128;
 
       # Logs
       access_log /var/log/nginx/access.log;

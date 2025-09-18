@@ -9,15 +9,21 @@
         extraGroups = [ "networkmanager" "wheel" ];
       };
 
-      # Set www user
       www = {
-        # Set zsh to default shell
-        shell = pkgs.zsh;
+        shell = pkgs.fish;
         isSystemUser = true;
         createHome = true;
         home = "/home/www";
         group = "www";
         extraGroups = [ "nextcloud" "wheel" ];
+      };
+
+      bio = {
+        # Set fish to default shell
+        shell = pkgs.fish;
+        isNormalUser = true;
+        createHome = true;
+        extraGroups = [ "" ];
       };
     };
 

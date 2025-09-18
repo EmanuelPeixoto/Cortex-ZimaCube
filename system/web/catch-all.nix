@@ -14,23 +14,23 @@ in
   environment.etc."ssl/private/ssl-cert-snakeoil.key".source = "${snakeoil}/key.pem";
 
   services.nginx.virtualHosts = {
-    "catchall-https" = {
-      serverName = "_";
-      listen = [{
-        addr = "0.0.0.0";
-        port = 443;
-        ssl = true;
-        extraParameters = [ "default_server" ];
-      }];
-
-      extraConfig = ''
-        ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
-        ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
-        access_log /var/log/nginx/gabriela-access.log;
-        error_log /var/log/nginx/gabriela-error.log;
-        return 444;
-      '';
-    };
+    # "catchall-https" = {
+    #   serverName = "_";
+    #   listen = [{
+    #     addr = "0.0.0.0";
+    #     port = 443;
+    #     ssl = true;
+    #     extraParameters = [ "default_server" ];
+    #   }];
+    #
+    #   extraConfig = ''
+    #     ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    #     ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+    #     access_log /var/log/nginx/catch-all-access.log;
+    #     error_log /var/log/nginx/catch-all-error.log;
+    #     return 444;
+    #   '';
+    # };
 
     "catchall-http" = {
       serverName = "_";
@@ -41,8 +41,8 @@ in
       }];
 
       extraConfig = ''
-        access_log /var/log/nginx/catchall-access.log;
-        error_log /var/log/nginx/catchall-error.log;
+        access_log /var/log/nginx/catch-all-access.log;
+        error_log /var/log/nginx/catch-all-error.log;
         return 444;
       '';
     };

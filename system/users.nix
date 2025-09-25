@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   users = {
     users = {
@@ -17,19 +17,13 @@
         group = "www";
         extraGroups = [ "nextcloud" "wheel" ];
       };
-
-      bio = {
-        # Set fish to default shell
-        shell = pkgs.fish;
-        isNormalUser = true;
-        createHome = true;
-        extraGroups = [ "" ];
-      };
     };
 
-    groups.www = {
-      name = "www";
-      members = [ "nginx" "nextcloud" "acme" ];
+    groups = {
+      www = {
+        name = "www";
+        members = [ "nginx" "nextcloud" ];
+      };
     };
   };
 }

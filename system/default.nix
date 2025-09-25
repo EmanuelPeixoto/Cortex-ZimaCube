@@ -1,8 +1,7 @@
 {
   imports = [
-    #./acme.nix
+    ./alunos.nix
     ./apps.nix
-    ./avahi.nix
     ./docker.nix
     ./firewall.nix
     ./flake-config.nix

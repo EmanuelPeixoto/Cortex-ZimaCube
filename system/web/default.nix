@@ -1,9 +1,7 @@
 {
   imports = [
-    # ./acme.nix
-    ./catch-all.nix
+    # ./catch-all.nix
     ./nextcloud.nix
-    ./rstudio.nix
   ];
   services.nginx = {
     enable = true;

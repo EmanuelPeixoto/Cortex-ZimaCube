@@ -4,7 +4,7 @@
     serverName = config.services.nextcloud.hostName;
     listen = [{
       addr = "0.0.0.0";
-      port = 80;
+      port = 8080;
       #ssl = true;
     }];
 
@@ -17,5 +17,5 @@
     '';
   };
 
-  networking.firewall.allowedTCPPorts = [ 80 ];
+  networking.firewall.allowedTCPPorts = [ 8080 ];
 }

@@ -6,18 +6,20 @@
     ./firewall.nix
     ./flake-config.nix
     ./hardware-configuration.nix
+    ./HDs.nix
     ./locale.nix
-    ./nextcloud
+    # ./nextcloud
     ./ngrok.nix
     ./nvidia.nix
+    ./permissions.nix
     ./rstudio.nix
+    ./sftpgo.nix
     ./smartd.nix
     ./sound.nix
     ./ssh.nix
     ./users.nix
-    ./web
+    # ./web
     ./xserver.nix
-    ./zfs.nix
   ];
 
   # Hostname

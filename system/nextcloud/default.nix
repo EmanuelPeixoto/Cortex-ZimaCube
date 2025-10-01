@@ -6,7 +6,7 @@
   ];
 
   systemd.tmpfiles.rules = [
-    "d /mnt/nextcloud/data 0750 nextcloud nextcloud -"
+    "d /mnt/nextcloud/data 0770 nextcloud nextcloud -"
   ];
 
   services.nextcloud = {
@@ -22,6 +22,7 @@
       log_type = "file";
       trusted_domains = [
         "${config.networking.hostName}.local"
+        "172.20.53.238"
       ];
       memcache.local = "\\OC\\Memcache\\APCu";
       filelocking.enabled = true;

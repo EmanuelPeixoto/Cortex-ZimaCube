@@ -11,7 +11,6 @@
     # ./nextcloud
     ./ngrok.nix
     ./nvidia.nix
-    ./permissions.nix
     ./rstudio.nix
     ./sftpgo.nix
     ./smartd.nix

@@ -3,10 +3,10 @@
 let
   # formato: nome_professor = [ "matricula1" "matricula2" ];
   professoresETurmas = {
-    professor = [ "2025001" "2025002" "2025003" ];
+    medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" ];
   };
 
-  baseDir = "/mnt/nextcloud";
+  baseDir = "/mnt/sharefiles";
 
 
   allUsers = lib.listToAttrs (

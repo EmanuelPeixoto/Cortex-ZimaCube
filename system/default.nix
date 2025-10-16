@@ -12,7 +12,7 @@
     ./ngrok.nix
     ./nvidia.nix
     ./rstudio.nix
-    ./sftpgo.nix
+    # ./sftpgo.nix
     ./smartd.nix
     ./sound.nix
     ./ssh.nix

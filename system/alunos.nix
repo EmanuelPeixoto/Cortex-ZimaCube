@@ -3,7 +3,7 @@
 let
   # formato: nome_professor = [ "matricula1" "matricula2" ];
   professoresETurmas = {
-    medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" ];
+    medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" "ccemanuel" ];
   };
 
   baseDir = "/mnt/sharefiles";
@@ -22,6 +22,7 @@ let
             home = "${baseDir}/${professorName}";
             shell = pkgs.fish;
             extraGroups = [ "${professorName}-group" "wheel" ];
+            initialPassword = professorName;
           };
         };
 
@@ -69,7 +70,7 @@ in
   systemd.services."setup-data-dirs-and-acls" = {
     description = "Create user directories and set POSIX ACLs for academic users";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network-online.target" "sftpgo.service" "nss-user-lookup.target" ];
+    after = [ "nss-user-lookup.target" ];
     requires = [ "nss-user-lookup.target" ];
     path = with pkgs; [ coreutils acl ];
     serviceConfig = {
@@ -78,43 +79,47 @@ in
       RemainAfterExit = true;
     };
     script = ''
-      set -eux
+    set -eux
 
-      ${lib.concatStringsSep "\n" (
+    ${lib.concatStringsSep "\n" (
         lib.mapAttrsToList (professorName: matriculas:
           let
             usuariosAlunos = lib.map (m: "aluno" + m) matriculas;
             studentList = lib.concatStringsSep " " usuariosAlunos;
             professorGroup = "${professorName}-group";
           in ''
-            echo "--- Configurando para o professor: ${professorName} ---"
+          echo "--- Configurando para o professor: ${professorName} ---"
 
-            PROF_HOME="${baseDir}/${professorName}"
-            STUDENTS_BASE_DIR="$PROF_HOME/students"
-            SHARED_DIR="$PROF_HOME/Publico"
-            PROF_GROUP="${professorGroup}"
+          PROF_HOME="${baseDir}/${professorName}"
+          STUDENTS_BASE_DIR="$PROF_HOME/students"
+          SHARED_DIR="$PROF_HOME/Publico"
 
-            mkdir -p "$STUDENTS_BASE_DIR" "$SHARED_DIR"
-            chown -R "${professorName}:$PROF_GROUP" "$PROF_HOME"
-            chmod -R 770 "$PROF_HOME"
-            chmod g+s "$PROF_HOME" "$STUDENTS_BASE_DIR" "$SHARED_DIR"
+          mkdir -p "$STUDENTS_BASE_DIR" "$SHARED_DIR"
+          chown -R "${professorName}:${professorName}" "$PROF_HOME"
+          chmod 750 "$PROF_HOME"
+          chmod g+s "$PROF_HOME" "$STUDENTS_BASE_DIR" "$SHARED_DIR"
 
-            setfacl -R -m u:${professorName}:rwx,g:$PROF_GROUP:rwx,u:sftpgo:rwx "$SHARED_DIR"
-            setfacl -R -d -m u:${professorName}:rwx,g:$PROF_GROUP:rwx,u:sftpgo:rwx "$SHARED_DIR"
+          # Pasta compartilhada do professor
+          chown "${professorName}:${professorName}" "$SHARED_DIR"
+          chmod 770 "$SHARED_DIR"
 
-            for usuario in ${studentList}; do
-              STUD_HOME="$STUDENTS_BASE_DIR/$usuario"
-              mkdir -p "$STUD_HOME"
-              chown -R "$usuario:$PROF_GROUP" "$STUD_HOME"
-              chmod 770 "$STUD_HOME"
-              setfacl -b "$STUD_HOME"
-              setfacl -m u:$usuario:rwx,u:${professorName}:rwx,u:sftpgo:rwx,u:rstudio-server:rwx,o::--- "$STUD_HOME"
-              setfacl -d -m u:$usuario:rwx,u:${professorName}:rwx,u:sftpgo:rwx,u:rstudio-server:rwx,o::--- "$STUD_HOME"
-            done
+          for usuario in ${studentList}; do
+            STUD_HOME="$STUDENTS_BASE_DIR/$usuario"
+            mkdir -p "$STUD_HOME"
+
+            # Dono e grupo: o próprio aluno
+            chown -R "$usuario:$usuario" "$STUD_HOME"
+            chmod 700 "$STUD_HOME" # apenas o aluno tem acesso
+
+            # ACL: o professor também pode ler e escrever
+            setfacl -b "$STUD_HOME"
+            setfacl -m u:${professorName}:rwx "$STUD_HOME"
+            setfacl -d -m u:${professorName}:rwx "$STUD_HOME"
+          done
           ''
         ) professoresETurmas
       )}
-      echo ">>> Configuração de diretórios e ACLs concluída com sucesso. <<<"
+    echo ">>> Configuração concluída com sucesso. <<<"
     '';
   };
 }

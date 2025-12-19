@@ -70,8 +70,8 @@ in
   systemd.services."setup-data-dirs-and-acls" = {
     description = "Create user directories and set POSIX ACLs for academic users";
     wantedBy = [ "multi-user.target" ];
-    after = [ "nss-user-lookup.target" ];
-    requires = [ "nss-user-lookup.target" ];
+    after = [ "nss-user-lookup.target" "remote-fs.target" ];
+    requires = [ "nss-user-lookup.target" "remote-fs.target" ];
     path = with pkgs; [ coreutils acl ];
     serviceConfig = {
       Type = "oneshot";
@@ -95,12 +95,15 @@ in
           SHARED_DIR="$PROF_HOME/Publico"
 
           mkdir -p "$STUDENTS_BASE_DIR" "$SHARED_DIR"
-          chown -R "${professorName}:${professorName}" "$PROF_HOME"
+
+          # torne o dono do diretório do professor o próprio professor
+          # e o grupo do diretório como ${professorName}-group (para que alunos no grupo possam transitar)
+          chown -R "${professorName}:${professorName}-group" "$PROF_HOME"
           chmod 750 "$PROF_HOME"
           chmod g+s "$PROF_HOME" "$STUDENTS_BASE_DIR" "$SHARED_DIR"
 
           # Pasta compartilhada do professor
-          chown "${professorName}:${professorName}" "$SHARED_DIR"
+          chown "${professorName}:${professorName}-group" "$SHARED_DIR"
           chmod 770 "$SHARED_DIR"
 
           for usuario in ${studentList}; do

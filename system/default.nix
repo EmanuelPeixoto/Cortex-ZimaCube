@@ -8,16 +8,13 @@
     ./hardware-configuration.nix
     ./HDs.nix
     ./locale.nix
-    # ./nextcloud
     ./ngrok.nix
     ./nvidia.nix
     ./rstudio.nix
-    # ./sftpgo.nix
     ./smartd.nix
     ./sound.nix
     ./ssh.nix
     ./users.nix
-    # ./web
     ./xserver.nix
   ];
 

@@ -6,7 +6,6 @@
     ./firewall.nix
     ./flake-config.nix
     ./hardware-configuration.nix
-    ./HDs.nix
     ./locale.nix
     ./ngrok.nix
     ./nvidia.nix
@@ -16,6 +15,7 @@
     ./ssh.nix
     ./users.nix
     ./xserver.nix
+    ./zfs.nix
   ];
 
   # Hostname

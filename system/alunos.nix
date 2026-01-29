@@ -4,6 +4,7 @@ let
   # formato: nome_professor = [ "matricula1" "matricula2" ];
   professoresETurmas = {
     medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" "ccemanuel" ];
+    admincurso = [ "admincurso" "alan" "alexandre" "almerita" "ana" "anna" "bernardo" "brunna" "cristina" "daniel" "diana" "douglas" "elaine" "esmael" "fabio" "gabriela" "isabelle" "juanca" "juliana" "karoline" "leticia" "ryan" "yzabella" ];
   };
 
   baseDir = "/mnt/sharefiles";
@@ -104,7 +105,7 @@ in
 
           # Pasta compartilhada do professor
           chown "${professorName}:${professorName}-group" "$SHARED_DIR"
-          chmod 770 "$SHARED_DIR"
+          chmod 750 "$SHARED_DIR"
 
           for usuario in ${studentList}; do
             STUD_HOME="$STUDENTS_BASE_DIR/$usuario"

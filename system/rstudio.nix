@@ -4,6 +4,7 @@ let
   # para instalar os pacotes por aqui, busque os disponiveis no nixpkgs ex.: rPackages.BiocManager e coloque apenas BiocManager abaixo.
   myRPackages = with pkgs.rPackages; [
     BiocManager
+    blastula
     DiagrammeR
     DiagrammeRsvg
     Matrix

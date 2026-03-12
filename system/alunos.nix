@@ -4,7 +4,6 @@ let
   # formato: nome_professor = [ "matricula1" "matricula2" ];
   professoresETurmas = {
     medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" "ccemanuel" ];
-    admincurso = [ "admincurso" "alan" "alexandre" "almerita" "ana" "anna" "bernardo" "brunna" "cristina" "daniel" "diana" "douglas" "elaine" "esmael" "fabio" "gabriela" "isabelle" "juanca" "juliana" "karoline" "leticia" "ryan" "yzabella" ];
   };
 
   baseDir = "/mnt/sharefiles";

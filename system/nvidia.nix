@@ -1,20 +1,12 @@
 { config, pkgs, ...}:
+{
 
-let
-  nvidia-offload = pkgs.writeShellScriptBin "nvidia-offload" ''
-export __NV_PRIME_RENDER_OFFLOAD=1
-export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-GO
-export __GLX_VENDOR_LIBRARY_NAME=nvidia
-export __VK_LAYER_NV_optimus=NVIDIA_only
-exec "$@"
-'';
-in {
   environment.systemPackages = [
-    nvidia-offload
     pkgs.glxinfo
   ];
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.cudaSupport = true;
 
   boot = {
     extraModprobeConfig = "options nvidia-drm modeset=1";
@@ -37,8 +29,8 @@ in {
       modesetting.enable = true;
 
       powerManagement = {
-        enable = true;
-        finegrained = true;
+        enable = false;
+        finegrained = false;
       };
 
       open = false;
@@ -47,10 +39,10 @@ in {
 
       prime = {
         offload = {
-          enable = true;
-          enableOffloadCmd = true;
+          enable = false;
+          enableOffloadCmd = false;
         };
-        sync.enable = false;
+        sync.enable = true;
         intelBusId = "PCI:0:2:0";
         nvidiaBusId = "PCI:7:0:0";
       };

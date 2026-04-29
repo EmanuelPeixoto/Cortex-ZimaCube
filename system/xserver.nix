@@ -1,7 +1,7 @@
 {
   services.xserver = {
     enable = true;
-    videoDrivers = [ "modesetting" ];
+    videoDrivers = [ "nvidia" ];
 
     xkb = {
       layout = "br";

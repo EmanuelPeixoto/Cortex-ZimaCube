@@ -2,6 +2,7 @@
 {
   environment.systemPackages = with pkgs; [
     btop-cuda                 # Monitor of resources
+    cudatoolkit               # Wrapper substituting the deprecated runfile-based CUDA installation
     curl                      # Command line tool for transferring files with URL syntax
     fish                      # Smart and user-friendly command line shell
     gcc                       # GNU Compiler Collection
@@ -10,12 +11,14 @@
     git                       # Distributed version control system
     glibc                     # GNU C Library
     gnumake                   # Tool to control the generation of non-source files from sources
+    go                        # Go Programming language
     killall                   # No description :/
     lazygit                   # Simple terminal UI for git commands
     neovim                    # Vim text editor fork focused on extensibility and agility
     nh                        # Yet another nix cli helper
     nix-output-monitor        # Processes output of Nix commands to show helpful and pretty information
     progress                  # Tool that shows the progress of coreutils programs
+    tmux                      # Terminal multiplexer
     unrar                     # Utility for RAR archives
     unzip                     # Extraction utility for archives compressed in .zip format
     usbutils                  # Tools for working with USB devices, such as lsusb

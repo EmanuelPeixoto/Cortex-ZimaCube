@@ -9,11 +9,11 @@
     ./locale.nix
     ./ngrok.nix
     ./nvidia.nix
-    ./rstudio.nix
     ./smartd.nix
     ./sound.nix
     ./ssh.nix
     ./users.nix
+    ./web
     ./xserver.nix
     ./zfs.nix
   ];

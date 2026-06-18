@@ -1,15 +1,24 @@
 { pkgs, ... }:
-
 let
   myRPackages = import ./r-packages.nix { inherit pkgs; };
+
+  rWithPackages = pkgs.rWrapper.override {
+    packages = myRPackages;
+  };
 in
   {
+  environment.systemPackages = [ rWithPackages ];
+
+  users.groups.rlibs = {};
+
   services.rstudio-server = {
     enable = true;
     listenAddr = "0.0.0.0";
+
     rserverExtraConfig = ''
       www-port=8788
     '';
+
     rsessionExtraConfig = ''
       r-libs-user=/mnt/sharefiles/rlibs
     '';
@@ -59,6 +68,6 @@ in
   };
 
   systemd.tmpfiles.rules = [
-    "d /mnt/sharefiles/rlibs 1777 root root -"
+    "d /mnt/sharefiles/rlibs 2775 root rlibs -"
   ];
 }

@@ -6,6 +6,7 @@
     ./firewall.nix
     ./flake-config.nix
     ./hardware-configuration.nix
+    ./ia.nix
     ./locale.nix
     ./ngrok.nix
     ./nvidia.nix

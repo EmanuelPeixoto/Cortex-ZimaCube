@@ -14,6 +14,17 @@
           }
         }
 
+        redir /rcdsurvxai /rcdsurvxai/
+
+        handle_path /rcdsurvxai/* {
+          reverse_proxy localhost:8889 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Prefix /shiny
+          }
+        }
+
         handle /* {
           reverse_proxy localhost:8788
         }

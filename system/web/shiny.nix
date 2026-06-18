@@ -1,53 +1,85 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   myRPackages = import ./r-packages.nix { inherit pkgs; };
   rWithPackages = pkgs.rWrapper.override {
     packages = myRPackages;
   };
-in {
-  users.users.shiny = {
-    isNormalUser = true;
-    group = "shiny";
-    description = "Service account for CancerRCDShiny";
-  };
-  users.groups.shiny = {};
 
-  systemd.services.shiny-zima-cancer = {
-    description = "ZIMA Suit - CancerRCDShiny na porta 8888";
-    after = [ "network.target" "rstudio-server.service" ];
-    wantedBy = [ "multi-user.target" ];
+  # Factory: gera um atributo systemd.services a partir de um conjunto de opções
+  mkShinyService = {
+    name,          # string curta, ex: "cancer"
+    port,          # int, ex: 8888
+    appPath,       # path absoluto para o app.R
+    extraEnv ? {}, # atributos extras de Environment (opcional)
+    }:
+    let
+      svcName  = "shiny-zima-${name}";
+      runDir   = "/run/${svcName}";
+      appDir   = builtins.dirOf appPath;
+      userName = "shiny-${name}";
+    in {
+      # User/group por serviço
+      users.users.${userName} = {
+        isNormalUser = true;
+        group        = userName;
+        extraGroups  = [ "rlibs" ];
+        description  = "Service account for shiny-${name}";
+      };
+      users.groups.${userName} = {};
 
-    serviceConfig = {
-      User = "shiny";
-      Group = "shiny";
+      systemd.services.${svcName} = {
+        description = "ZIMA Suit — Shiny ${name} na porta ${toString port}";
+        after       = [ "network.target" ];
+        wantedBy    = [ "multi-user.target" ];
 
-      RuntimeDirectory = "shiny-zima-cancer";
-      RuntimeDirectoryMode = "0777";
+        path = [ pkgs.chromium ];
 
-      ExecStartPre = "+${pkgs.coreutils}/bin/rm -rf /run/shiny-zima-cancer/*";
+        serviceConfig = {
+          User  = userName;
+          Group = userName;
 
-      ExecStart = "${rWithPackages}/bin/Rscript /mnt/sharefiles/PHASE_III_Megarun_5_0_complete_ZIMA_Suit_Generator_final/PHASE_IV_CancerRCDShiny/app.R";
-      WorkingDirectory = "/mnt/sharefiles/PHASE_III_Megarun_5_0_complete_ZIMA_Suit_Generator_final/PHASE_IV_CancerRCDShiny";
+          RuntimeDirectory     = svcName;
+          RuntimeDirectoryMode = "0755";
 
-      Restart = "always";
-      RestartSec = "5s";
+          ExecStartPre = "+${pkgs.coreutils}/bin/rm -rf ${runDir}/*";
+          ExecStart    = "${rWithPackages}/bin/Rscript ${appPath}";
+          WorkingDirectory = appDir;
 
-      Environment = [
-        "HOME=/home/shiny"
-        "R_BROWSER=false"
-        "R_LIBS_USER=/mnt/sharefiles/rlibs"
-        "R_PDFVIEWER=false"
-        "R_SASS_CACHE_DIR=/run/shiny-zima-cancer/sass-cache"
-        "SASS_PATH=/run/shiny-zima-cancer"
-        "TMPDIR=/run/shiny-zima-cancer"
-        "XDG_CACHE_HOME=/run/shiny-zima-cancer/cache"
-      ];
+          Restart    = "always";
+          RestartSec = "5s";
 
-      ReadWritePaths = [
-        "/run/shiny-zima-cancer"
-        "/mnt/sharefiles/rlibs"
-        "/home/shiny"
-      ];
+          Environment = lib.mapAttrsToList (k: v: "${k}=${v}") ({
+            HOME            = "/run/${svcName}";
+            R_BROWSER       = "false";
+            R_LIBS_USER     = "/mnt/sharefiles/rlibs";
+            R_PDFVIEWER     = "false";
+            R_SASS_CACHE_DIR = "${runDir}/sass-cache";
+            SASS_PATH       = runDir;
+            TMPDIR          = runDir;
+            XDG_CACHE_HOME  = "${runDir}/cache";
+          } // extraEnv);
+
+          ReadWritePaths = [
+            runDir
+            "/mnt/sharefiles/rlibs"
+            "/run/${svcName}"
+          ];
+        };
+      };
     };
-  };
-}
+
+  services = map mkShinyService [
+    {
+      name    = "crcdp";
+      port    = 8888;
+      appPath = "/mnt/sharefiles/servicos/PHASE_III_Megarun_5_0_complete_ZIMA_Suit_Generator_final/PHASE_IV_CancerRCDShiny/appV2.R";
+    }
+    {
+      name    = "rcdsurvxai";
+      port    = 8889;
+      appPath = "/mnt/sharefiles/servicos/RCDSurvXai/02_OncoSurvXai_Shiny_V25.R";
+    }
+  ];
+
+in
+  lib.foldl' lib.recursiveUpdate {} services

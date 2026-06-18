@@ -1,27 +1,37 @@
 { pkgs }:
 with pkgs.rPackages; [
+  AnnotationDbi
   BiocManager
   DT
   DiagrammeR
   DiagrammeRsvg
+  GSVA
   Matrix
   R_utils
   Seurat
   SeuratObject
   UpSetR
+  base64enc
   blastula
   bsicons
   bslib
   caret
   circlize
+  curl
   data_table
+  digest
   doParallel
+  dplyr
+  filelock
   foreach
   fs
   ggplot2
   ggpubr
   ggtext
   gridExtra
+  htmlwidgets
+  httr2
+  jsonlite
   kableExtra
   lightgbm
   magick
@@ -30,25 +40,37 @@ with pkgs.rPackages; [
   openxlsx
   pROC
   pagedown
+  pak
   patchwork
   pdftools
   pheatmap
+  plotly
+  readr
+  readxl
   remotes
   rentrez
   reshape2
   rio
+  rmarkdown
   rms
   rsvg
   sass
+  scales
   sctransform
   shiny
+  shinycssloaders
+  shinydashboard
+  shinyjs
   stringi
+  stringr
   survival
   survivalROC
   survminer
+  tidyr
   tidyverse
   tiff
   timeROC
   webshot2
   xgboost
+  zip
 ]

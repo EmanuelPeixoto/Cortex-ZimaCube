@@ -1,6 +1,16 @@
 { pkgs, ... }:
 {
   environment.systemPackages = with pkgs; [
+    (python312.withPackages (ps: with ps; [
+      torch
+      torchvision
+      scipy
+      tokenizers
+      safetensors
+      torchaudio
+      numpy
+      tqdm
+    ]))
     btop-cuda                 # Monitor of resources
     cudatoolkit               # Wrapper substituting the deprecated runfile-based CUDA installation
     curl                      # Command line tool for transferring files with URL syntax

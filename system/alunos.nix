@@ -98,25 +98,33 @@ in
 
           # torne o dono do diretório do professor o próprio professor
           # e o grupo do diretório como ${professorName}-group (para que alunos no grupo possam transitar)
-          chown -R "${professorName}:${professorName}-group" "$PROF_HOME"
+          # ATENÇÃO: NÃO usar -R no PROF_HOME — isso invadiria os diretórios dos alunos e trocaria o dono
+          # Em vez disso, aplica ownership recursivo só nos itens do professor, pulando students/
+          chown "${professorName}:${professorName}-group" "$PROF_HOME"
+          for item in "$PROF_HOME"/*; do
+            [ "$item" = "$STUDENTS_BASE_DIR" ] && continue
+            chown -R "${professorName}:${professorName}-group" "$item" || true
+          done
           chmod 750 "$PROF_HOME"
           chmod g+s "$PROF_HOME" "$STUDENTS_BASE_DIR" "$SHARED_DIR"
 
           # Pasta compartilhada do professor
           chown "${professorName}:${professorName}-group" "$SHARED_DIR"
           chmod 750 "$SHARED_DIR"
+          # ACL: garante que arquivos novos/existentes sejam legíveis pelo grupo (alunos)
+          setfacl -m g:${professorGroup}:rx "$SHARED_DIR"
+          setfacl -d -m g:${professorGroup}:rx "$SHARED_DIR"
 
           for usuario in ${studentList}; do
             STUD_HOME="$STUDENTS_BASE_DIR/$usuario"
             mkdir -p "$STUD_HOME"
 
-            # Dono e grupo: o próprio aluno
+            # Dono e grupo: o próprio aluno (recursivo para corrigir arquivos existentes)
             chown -R "$usuario:$usuario" "$STUD_HOME"
             chmod 700 "$STUD_HOME" # apenas o aluno tem acesso
 
-            # ACL: o professor também pode ler e escrever
-            setfacl -b "$STUD_HOME"
-            setfacl -m u:${professorName}:rwx "$STUD_HOME"
+            # ACL: o professor também pode ler e escrever (recursivo para arquivos existentes)
+            setfacl -R -m u:${professorName}:rwx "$STUD_HOME"
             setfacl -d -m u:${professorName}:rwx "$STUD_HOME"
           done
           ''

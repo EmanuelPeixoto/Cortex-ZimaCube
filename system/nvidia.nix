@@ -2,11 +2,8 @@
 {
 
   environment.systemPackages = [
-    pkgs.glxinfo
+    pkgs.mesa-demos
   ];
-
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.cudaSupport = true;
 
   boot = {
     extraModprobeConfig = "options nvidia-drm modeset=1";

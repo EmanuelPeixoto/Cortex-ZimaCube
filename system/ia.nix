@@ -8,7 +8,7 @@
   environment.systemPackages = with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
     pi
   ]++[
-      pkgs.nodejs_20
+      pkgs.nodejs_22
       pkgs.goose-cli
   ];
 }

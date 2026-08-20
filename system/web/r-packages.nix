@@ -4,12 +4,13 @@ with pkgs.rPackages; [
   BiocManager
   DT
   DiagrammeR
-  DiagrammeRsvg
+  pkgs.unstable.rPackages.DiagrammeRsvg
   GSVA
   Matrix
   R_utils
   Seurat
   SeuratObject
+  UCSCXenaShiny
   UpSetR
   base64enc
   blastula

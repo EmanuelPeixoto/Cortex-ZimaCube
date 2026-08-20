@@ -2,17 +2,25 @@
   programs.git = {
     enable = true;
 
-    userEmail = "leunamepeixoto@gmail.com";
-    userName = "EmanuelPeixoto";
+    settings = {
+      user = {
+        email = "leunamepeixoto@gmail.com";
+        name = "EmanuelPeixoto";
+      };
 
-    extraConfig = {
-      github.User = "EmanuelPeixoto";
-      init.defaultBranch = "main";
-    };
+      github = {
+        User = "EmanuelPeixoto";
+      };
 
-    difftastic = {
-      enable = true;
-      display = "side-by-side-show-both";
+      init = {
+        defaultBranch = "main";
+      };
     };
+  };
+
+  programs.difftastic = {
+    enable = true;
+    git.enable = true;
+    options.display = "side-by-side-show-both";
   };
 }

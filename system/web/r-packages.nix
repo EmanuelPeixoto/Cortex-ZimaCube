@@ -1,4 +1,17 @@
 { pkgs }:
+let
+  # gganatogram só existe no GitHub (não está no CRAN/nixpkgs).
+  gganatogram = pkgs.rPackages.buildRPackage {
+    name = "gganatogram-1.1.1";
+    src = pkgs.fetchFromGitHub {
+      owner = "jespermaag";
+      repo  = "gganatogram";
+      rev   = "eac6df5d3a6ac1a4404f2516e1e71a60274a6a0f";
+      hash  = "sha256-cOnQB20cwPeEeNaYS5XNu2dmrP9UIb47bfTKI37wkG8=";
+    };
+    propagatedBuildInputs = with pkgs.rPackages; [ ggpolypath ggplot2 ];
+  };
+in
 with pkgs.rPackages; [
   AnnotationDbi
   BiocManager
@@ -23,14 +36,18 @@ with pkgs.rPackages; [
   digest
   doParallel
   dplyr
+  emayili
   filelock
   foreach
   fs
   ggplot2
+  ggpolypath
+  gganatogram
   ggpubr
   ggtext
   gridExtra
   htmlwidgets
+  httr
   httr2
   jsonlite
   kableExtra
@@ -71,7 +88,10 @@ with pkgs.rPackages; [
   tidyverse
   tiff
   timeROC
+  visNetwork
   webshot2
+  writexl
   xgboost
+  xml2
   zip
 ]

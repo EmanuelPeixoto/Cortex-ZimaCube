@@ -79,6 +79,11 @@ let
       port    = 8889;
       appPath = "/mnt/sharefiles/servicos/RCDSurvXai/02_OncoSurvXai_Shiny_V25.R";
     }
+        {
+      name    = "rcdome";
+      port    = 8890;
+      appPath = "/mnt/sharefiles/servicos/RCDome_Atlas/APP/run.R";
+    }
   ];
 
 in

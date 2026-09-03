@@ -25,6 +25,17 @@
           }
         }
 
+        redir /rcdome /rcdome/
+
+        handle_path /rcdome/* {
+          reverse_proxy localhost:8890 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Prefix /shiny
+          }
+        }
+
         handle /* {
           reverse_proxy localhost:8788
         }

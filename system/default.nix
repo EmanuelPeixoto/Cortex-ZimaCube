@@ -14,6 +14,7 @@
     ./sound.nix
     ./ssh.nix
     ./users.nix
+    ./video-ai.nix
     ./web
     ./xserver.nix
     ./zfs.nix

@@ -26,7 +26,7 @@
   # Boot
   boot.loader = {
     systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
+    efi.canTouchEfiVariables = false;
   };
 
   # Networking
@@ -40,6 +40,28 @@
 
   services = {
     vnstat.enable = true;
+  };
+
+  # CPU: governor performance (prefere o boost máximo). Remova esta linha p/ voltar ao powersave.
+  powerManagement.cpuFreqGovernor = "performance";
+
+  # Bump dos power limits do i5-1235U (valores em microwatts, uW).
+  # Padrões de fábrica: PL1 = 28000000 (28W) | PL2 = 42000000 (42W).
+  # Para mudar: edite os números. Para reverter: volte aos padrões OU comente/remova este serviço inteiro.
+  # Obs.: se o MSR estiver travado (mitigação Plundervolt), o echo falha silenciosamente (|| true).
+  systemd.services.cpu-power-bump = {
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "root";
+      RemainAfterExit = true;
+    };
+    script = ''
+      # PL1 (sustentado): 28W -> 40W
+      echo 40000000 > /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_0_power_limit_uw || true
+      # PL2 (burst): 42W -> 50W
+      echo 50000000 > /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_1_power_limit_uw || true
+    '';
   };
 
   system.stateVersion = "25.05";

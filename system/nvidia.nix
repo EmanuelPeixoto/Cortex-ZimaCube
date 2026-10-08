@@ -7,6 +7,7 @@
 
   boot = {
     extraModprobeConfig = "options nvidia-drm modeset=1";
+    initrd.kernelModules = [ "nvidia_modeset" ];
     blacklistedKernelModules = [ "nouveau" ];
   };
 
@@ -18,12 +19,17 @@
       enable32Bit = true;
     };
 
-    nvidiaOptimus.disable = false;
-
     nvidia = {
       package = config.boot.kernelPackages.nvidiaPackages.stable;
 
       modesetting.enable = true;
+
+      # Monitor na iGPU Intel; nvidia só pra compute (CUDA).
+      prime = {
+        offload.enable = true;
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:7:0:0";
+      };
 
       powerManagement = {
         enable = false;
@@ -33,16 +39,6 @@
       open = false;
 
       nvidiaSettings = true;
-
-      prime = {
-        offload = {
-          enable = false;
-          enableOffloadCmd = false;
-        };
-        sync.enable = true;
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:7:0:0";
-      };
     };
   };
 }

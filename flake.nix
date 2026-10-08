@@ -21,7 +21,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     llm-agents = {
-      url = "github:numtide/llm-agents.nix";
+      # Pinado: revs mais novos exigem `installAgentSkills` (não existe no nixpkgs 26.05).
+      url = "github:numtide/llm-agents.nix/168977b24c59aa91e76609e4c741c9592a944cd7";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

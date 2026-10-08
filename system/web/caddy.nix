@@ -36,6 +36,22 @@
           }
         }
 
+        redir /v2 /v2/
+
+        handle_path /v2/* {
+          reverse_proxy 127.0.0.1:8789 {
+            header_up Host {host}
+          }
+        }
+
+        redir /iavideo /iavideo/
+
+        handle_path /iavideo/* {
+          reverse_proxy localhost:8188 {
+            header_up Host {host}
+          }
+        }
+
         handle /* {
           reverse_proxy localhost:8788
         }

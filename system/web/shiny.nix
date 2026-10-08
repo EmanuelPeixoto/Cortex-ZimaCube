@@ -29,10 +29,20 @@ let
 
       systemd.services.${svcName} = {
         description = "ZIMA Suit — Shiny ${name} na porta ${toString port}";
-        after       = [ "network.target" ];
+        after       = [ "network.target" "remote-fs.target" ];
+        requires    = [ "remote-fs.target" ];
         wantedBy    = [ "multi-user.target" ];
 
-        path = [ pkgs.chromium ];
+        path = with pkgs; [
+          rWithPackages
+          chromium
+          pandoc
+          bash
+          coreutils
+          gcc
+          gnumake
+          pkg-config
+        ];
 
         serviceConfig = {
           User  = userName;
@@ -47,6 +57,9 @@ let
 
           Restart    = "always";
           RestartSec = "5s";
+
+          # ponytail: cap por app p/ OOM não derrubar a máquina. Ajuste por app se um legítimo estourar.
+          MemoryMax  = "8G";
 
           Environment = lib.mapAttrsToList (k: v: "${k}=${v}") ({
             HOME            = "/run/${svcName}";

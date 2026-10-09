@@ -4,6 +4,9 @@ let
 
   nvidiaDriver = config.hardware.nvidia.package; # nvidia-smi
 
+  # Libs de runtime p/ binários Linux genéricos (pip wheels, piper, wav2lip).
+  runtimeLibs = lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib pkgs.zlib pkgs.bzip2 pkgs.xz pkgs.libsndfile nvidiaDriver ];
+
   # Binários que os scripts precisam no PATH (self-contained, sem nix-shell).
   toolPath = lib.makeBinPath (with pkgs; [
     python312
@@ -13,10 +16,10 @@ let
     nvidiaDriver
   ]);
 
-  # Envolve cada script com o ambiente necessário (PATH + driver CUDA + HOME).
+  # Envolve cada script com o ambiente necessário (PATH + libs + HOME).
   mkScript = name: text: pkgs.writeShellScriptBin name ''
     export PATH=${toolPath}:$PATH
-    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${nvidiaDriver}/lib
+    export LD_LIBRARY_PATH=${runtimeLibs}
     export TORCH_CUDA_ARCH_LIST=8.9
     export VIDEO_AI_HOME=''${VIDEO_AI_HOME:-${videoAIDir}}
     ${text}
@@ -59,6 +62,46 @@ let
       python3 -m venv "$BASE/venvs/whisper"
       "$BASE/venvs/whisper/bin/pip" install -U pip
       "$BASE/venvs/whisper/bin/pip" install faster-whisper
+    fi
+
+    # ---- Wav2Lip (lip sync) ----
+    if [ ! -d "$BASE/venvs/wav2lip" ]; then
+      echo ">> criando venv wav2lip..."
+      python3 -m venv "$BASE/venvs/wav2lip"
+      "$BASE/venvs/wav2lip/bin/pip" install -U pip
+      "$BASE/venvs/wav2lip/bin/pip" install torch --index-url https://download.pytorch.org/whl/cpu
+      "$BASE/venvs/wav2lip/bin/pip" install opencv-python-headless librosa numpy tqdm numba soundfile
+    fi
+    if [ ! -d "$BASE/src/Wav2Lip" ]; then
+      echo ">> clonando Wav2Lip..."
+      git clone --depth 1 https://github.com/Rudrabha/Wav2Lip.git "$BASE/src/Wav2Lip"
+      # compat com librosa novo (API mudou)
+      sed -i 's/^import librosa$/import librosa\nimport soundfile as sf/' "$BASE/src/Wav2Lip/audio.py"
+      sed -i 's/librosa\.core\.load/librosa.load/' "$BASE/src/Wav2Lip/audio.py"
+      sed -i 's/librosa\.output\.write_wav(path, wav, sr=sr)/sf.write(path, wav, sr)/' "$BASE/src/Wav2Lip/audio.py"
+      sed -i 's/librosa\.filters\.mel(hp\.sample_rate, hp\.n_fft, n_mels=hp\.num_mels,/librosa.filters.mel(sr=hp.sample_rate, n_fft=hp.n_fft, n_mels=hp.num_mels,/' "$BASE/src/Wav2Lip/audio.py"
+    fi
+    mkdir -p "$BASE/src/Wav2Lip/checkpoints" "$BASE/src/Wav2Lip/face_detection/detection/sfd"
+    if [ ! -f "$BASE/src/Wav2Lip/checkpoints/wav2lip_gan.pth" ]; then
+      echo ">> baixando wav2lip_gan.pth..."
+      wget -c -O "$BASE/src/Wav2Lip/checkpoints/wav2lip_gan.pth" "https://huggingface.co/Nekochu/Wav2Lip/resolve/main/wav2lip_gan.pth"
+    fi
+    if [ ! -f "$BASE/src/Wav2Lip/face_detection/detection/sfd/s3fd.pth" ]; then
+      wget -c -O "$BASE/src/Wav2Lip/face_detection/detection/sfd/s3fd.pth" "https://huggingface.co/camenduru/Wav2Lip/resolve/main/face_detection/detection/sfd/s3fd.pth"
+    fi
+
+    # ---- Piper (TTS PT-BR) ----
+    if [ ! -f "$BASE/tools/piper/piper" ]; then
+      echo ">> baixando piper (binário)..."
+      mkdir -p "$BASE/tools"
+      wget -c -O /tmp/piper.tar.gz "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz"
+      tar xzf /tmp/piper.tar.gz -C "$BASE/tools"
+    fi
+    if [ ! -f "$BASE/models/piper/pt_BR-faber-medium.onnx" ]; then
+      echo ">> baixando voz piper pt_BR..."
+      mkdir -p "$BASE/models/piper"
+      wget -c -O "$BASE/models/piper/pt_BR-faber-medium.onnx" "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx"
+      wget -c -O "$BASE/models/piper/pt_BR-faber-medium.onnx.json" "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json"
     fi
 
     echo ">> bootstrap OK em $BASE"
@@ -158,9 +201,32 @@ PY
       "$OUT"
     echo ">> final em $OUT"
   '';
+
+  narratePt = mkScript "video_ai_narrate_pt" ''
+    set -euo pipefail
+    BASE="$VIDEO_AI_HOME"
+    [ "$#" -ge 2 ] || { echo "uso: video_ai_narrate_pt texto.txt saida.wav"; exit 1; }
+    TEXT_FILE="$1"; OUT="$2"
+    VOICE="$BASE/models/piper/pt_BR-faber-medium.onnx"
+    cd "$BASE/tools/piper"
+    LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./piper --model "$VOICE" --output_file "$OUT" < "$TEXT_FILE"
+    echo ">> narração PT-BR em $OUT"
+  '';
+
+  lipsync = mkScript "video_ai_lipsync" ''
+    set -euo pipefail
+    BASE="$VIDEO_AI_HOME"
+    [ "$#" -eq 3 ] || { echo "uso: video_ai_lipsync video.mp4 audio.wav saida.mp4"; exit 1; }
+    VID="$1"; AUD="$2"; OUT="$3"
+    cd "$BASE/src/Wav2Lip"
+    "$BASE/venvs/wav2lip/bin/python" inference.py \
+      --checkpoint_path checkpoints/wav2lip_gan.pth \
+      --face "$VID" --audio "$AUD" --outfile "$OUT"
+    echo ">> lip sync em $OUT"
+  '';
 in
 {
-  environment.systemPackages = [ bootstrap check downloadModels narrate subtitles burn ];
+  environment.systemPackages = [ bootstrap check downloadModels narrate narratePt subtitles burn lipsync ];
 
   # usuário do serviço + grupo p/ compartilhar /mnt/sharefiles/video-ai
   users.users.videoai = {

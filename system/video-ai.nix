@@ -104,6 +104,31 @@ let
       wget -c -O "$BASE/models/piper/pt_BR-faber-medium.onnx.json" "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json"
     fi
 
+    # ---- GFPGAN (realce de rosto pós-lipsync) ----
+    if [ ! -d "$BASE/venvs/gfpgan" ]; then
+      echo ">> criando venv gfpgan..."
+      python3 -m venv "$BASE/venvs/gfpgan"
+      "$BASE/venvs/gfpgan/bin/pip" install -U pip
+      "$BASE/venvs/gfpgan/bin/pip" install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      env BASICSR_EXT=False "$BASE/venvs/gfpgan/bin/pip" install basicsr facexlib lmdb opencv-python-headless pyyaml scipy tqdm
+      sed -i 's/from torchvision.transforms.functional_tensor import rgb_to_grayscale/from torchvision.transforms.functional import rgb_to_grayscale/' "$BASE/venvs/gfpgan/lib/python3.12/site-packages/basicsr/data/degradations.py"
+    fi
+    if [ ! -d "$BASE/src/GFPGAN" ]; then
+      echo ">> clonando GFPGAN..."
+      git clone --depth 1 https://github.com/TencentARC/GFPGAN.git "$BASE/src/GFPGAN"
+    fi
+    cp /home/zimacube/.config/Cortex-ZimaCube/system/video-ai-enhance.py "$BASE/src/GFPGAN/enhance_video.py" 2>/dev/null || true
+    mkdir -p "$BASE/src/GFPGAN/experiments/weights" "$BASE/src/GFPGAN/gfpgan/weights"
+    if [ ! -f "$BASE/src/GFPGAN/experiments/weights/GFPGANv1.4.pth" ]; then
+      wget -c -O "$BASE/src/GFPGAN/experiments/weights/GFPGANv1.4.pth" "https://huggingface.co/numz/wav2lip_studio/resolve/main/GFPGAN/GFPGANv1.4.pth"
+    fi
+    if [ ! -f "$BASE/src/GFPGAN/gfpgan/weights/detection_Resnet50_Final.pth" ]; then
+      wget -c -O "$BASE/src/GFPGAN/gfpgan/weights/detection_Resnet50_Final.pth" "https://huggingface.co/numz/wav2lip_studio/resolve/main/GFPGAN/detection_Resnet50_Final.pth"
+    fi
+    if [ ! -f "$BASE/src/GFPGAN/gfpgan/weights/parsing_parsenet.pth" ]; then
+      wget -c -O "$BASE/src/GFPGAN/gfpgan/weights/parsing_parsenet.pth" "https://huggingface.co/numz/wav2lip_studio/resolve/main/GFPGAN/parsing_parsenet.pth"
+    fi
+
     echo ">> bootstrap OK em $BASE"
     echo ">> próximo: video_ai_download_models"
   '';
@@ -224,9 +249,18 @@ PY
       --face "$VID" --audio "$AUD" --outfile "$OUT"
     echo ">> lip sync em $OUT"
   '';
+
+  faceEnhance = mkScript "video_ai_face_enhance" ''
+    set -euo pipefail
+    BASE="$VIDEO_AI_HOME"
+    [ "$#" -eq 2 ] || { echo "uso: video_ai_face_enhance video.mp4 saida.mp4"; exit 1; }
+    cd "$BASE/src/GFPGAN"
+    "$BASE/venvs/gfpgan/bin/python" enhance_video.py "$1" "$2"
+    echo ">> realce em $2"
+  '';
 in
 {
-  environment.systemPackages = [ bootstrap check downloadModels narrate narratePt subtitles burn lipsync ];
+  environment.systemPackages = [ bootstrap check downloadModels narrate narratePt subtitles burn lipsync faceEnhance ];
 
   # usuário do serviço + grupo p/ compartilhar /mnt/sharefiles/video-ai
   users.users.videoai = {

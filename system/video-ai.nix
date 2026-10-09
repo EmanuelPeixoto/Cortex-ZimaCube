@@ -16,7 +16,7 @@ let
   # Envolve cada script com o ambiente necessário (PATH + driver CUDA + HOME).
   mkScript = name: text: pkgs.writeShellScriptBin name ''
     export PATH=${toolPath}:$PATH
-    export LD_LIBRARY_PATH=/run/opengl-driver/lib
+    export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${nvidiaDriver}/lib
     export TORCH_CUDA_ARCH_LIST=8.9
     export VIDEO_AI_HOME=''${VIDEO_AI_HOME:-${videoAIDir}}
     ${text}
@@ -38,6 +38,9 @@ let
       echo ">> clonando ComfyUI..."
       git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git "$BASE/src/ComfyUI"
     fi
+    # o serviço roda como videoai: garante escrita no clone (user/, models/)
+    chgrp -R videoai "$BASE/src/ComfyUI" 2>/dev/null || true
+    chmod -R g+w "$BASE/src/ComfyUI" 2>/dev/null || true
     "$BASE/venvs/comfy/bin/pip" install -r "$BASE/src/ComfyUI/requirements.txt"
 
     # symlink dos modelos (usado pelo serviço comfyui)
@@ -77,33 +80,29 @@ let
   downloadModels = mkScript "video_ai_download_models" ''
     set -euo pipefail
     BASE="$VIDEO_AI_HOME"
-    HF="https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B/resolve/main"
+    HF="https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files"
     M="$BASE/models/comfyui"
-    mkdir -p "$M"/{diffusion_models,text_encoders,vae,clip}
+    mkdir -p "$M/diffusion_models" "$M/text_encoders" "$M/vae"
 
     dl() { wget -c -O "$2" "$HF/$1"; }
 
-    echo ">> baixando Wan 2.2 TI2V-5B (~30 GB, pode demorar)..."
-    dl high_noise_720p/wan2.2_ti2v_5B_high_noise_720p.safetensors \
-       "$M/diffusion_models/wan2.2_ti2v_5B_high_noise_720p.safetensors"
-    dl low_noise_720p/wan2.2_ti2v_5B_low_noise_720p.safetensors \
-       "$M/diffusion_models/wan2.2_ti2v_5B_low_noise_720p.safetensors"
-    dl models_t5_umt5-xxl-enc-bf16.pth \
-       "$M/text_encoders/models_t5_umt5-xxl-enc-bf16.pth"
-    dl Wan2.2_VAE.pth \
-       "$M/vae/Wan2.2_VAE.pth"
-    dl models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth \
-       "$M/clip/models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth"
+    echo ">> baixando Wan 2.2 TI2V-5B (formato ComfyUI, ~18 GB, pode demorar)..."
+    dl diffusion_models/wan2.2_ti2v_5B_fp16.safetensors \
+       "$M/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors"
+    dl text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors \
+       "$M/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+    dl vae/wan2.2_vae.safetensors \
+       "$M/vae/wan2.2_vae.safetensors"
 
     echo ">> modelos em $M"
-    echo ">> (se algum wget der 404, confira os nomes em https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B/tree/main)"
+    echo ">> no ComfyUI: UNETLoader -> wan2.2_ti2v_5B_fp16, CLIPLoader(tipo wan) -> umt5_xxl_fp8, VAE -> wan2.2_vae"
   '';
 
   narrate = mkScript "video_ai_narrate" ''
     set -euo pipefail
     BASE="$VIDEO_AI_HOME"
     [ "$#" -ge 2 ] || { echo "uso: video_ai_narrate roteiro.txt narracao.wav [referencia.wav]"; exit 1; }
-    TEXT="$1"; OUT="$2"; REF="''${3:-}"
+    TEXT=$(cat "$1"); OUT="$2"; REF="''${3:-}"
     exec "$BASE/venvs/tts/bin/python" - "$TEXT" "$OUT" "$REF" <<'PY'
 import sys
 import soundfile as sf
@@ -111,7 +110,7 @@ from chatterbox.tts import ChatterboxTTS
 text, out, ref = sys.argv[1], sys.argv[2], sys.argv[3]
 model = ChatterboxTTS.from_pretrained(device="cuda")
 wav = model.generate(text, audio_prompt_path=ref if ref else None)
-sf.write(out, wav, model.sr)
+sf.write(out, wav.squeeze(0).cpu().numpy(), model.sr)
 print(f"narracao salva em {out}")
 PY
   '';
@@ -202,7 +201,7 @@ in
       WorkingDirectory = "${videoAIDir}/src/ComfyUI";
       ExecStart = "${videoAIDir}/venvs/comfy/bin/python main.py --listen 0.0.0.0 --port 8188";
       Environment = [
-        "LD_LIBRARY_PATH=/run/opengl-driver/lib"
+        "LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${nvidiaDriver}/lib"
         "TORCH_CUDA_ARCH_LIST=8.9"
       ];
       Restart = "on-failure";

@@ -35,7 +35,7 @@ let
             createHome = false;
             home = "${baseDir}/${professorName}";
             shell = pkgs.fish;
-            extraGroups = [ "${professorName}-group" "wheel" ];
+            extraGroups = [ "${professorName}-group" ];
             initialPassword = professorName;
           };
         };
@@ -61,7 +61,7 @@ let
 
   allGroups = lib.mapAttrs' (professorName: _:
     lib.nameValuePair "${professorName}-group" {
-      members = [ "rstudio-server" "sftpgo" ];
+      members = [ "rstudio-server" ];
     }
   ) professoresETurmas;
 

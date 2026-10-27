@@ -35,7 +35,7 @@ let
             createHome = false;
             home = "${baseDir}/${professorName}";
             shell = pkgs.fish;
-            extraGroups = [ "${professorName}-group" ];
+            extraGroups = [ "${professorName}-group" "wheel" ];
             initialPassword = professorName;
           };
         };

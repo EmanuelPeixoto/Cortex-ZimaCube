@@ -10,6 +10,7 @@
     ./locale.nix
     ./ngrok.nix
     ./nvidia.nix
+    ./scout.nix
     ./smartd.nix
     ./sound.nix
     ./ssh.nix

@@ -7,6 +7,7 @@
     ./flake-config.nix
     ./hardware-configuration.nix
     ./ia.nix
+    ./keyring.nix
     ./locale.nix
     ./ngrok.nix
     ./nvidia.nix

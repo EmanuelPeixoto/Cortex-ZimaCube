@@ -6,19 +6,14 @@ let
     medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" "ccemanuel" ];
   };
 
-  # UID fixo dos professores — TEM que ser >= 1000 para o usuário aparecer no
-  # LightDM: tanto o accounts-daemon (que o lightdm usa para listar usuários)
-  # quanto o /etc/lightdm/users.conf (minimum-uid=1000) descartam uid < 1000.
-  #
-  # O medina foi criado antes como isSystemUser e ganhou uid 982 (gravado em
-  # /var/lib/nixos/uid-map). Trocar para isNormalUser no nix NÃO muda o uid de
-  # uma conta já existente — o update-users-groups.pl só avisa "not applying UID
-  # change" — então a migração do uid foi feita uma vez na mão:
+  # UID fixo >= 1000: abaixo disso o LightDM não lista o usuário (accounts-daemon
+  # e /etc/lightdm/users.conf com minimum-uid=1000). O medina nasceu como
+  # isSystemUser (uid 982 no uid-map) e o nix não migra uid de conta existente
+  # ("not applying UID change") — migração feita uma vez na mão:
   #   sudo usermod -u 1500 medina
   #   sudo rm -f /mnt/sharefiles/.perms-initialized
-  #   sudo systemctl restart setup-data-dirs-and-acls.service   # refaz chown + ACLs
-  # Deixar o uid aqui evita reincidência (sem isto, uma recriação da conta pega
-  # uid novo do uid-map; fixado, ele é sempre >= 1000).
+  #   sudo systemctl restart setup-data-dirs-and-acls.service
+  # Fixar aqui evita que uma recriação da conta pegue uid novo do uid-map.
   uidsProfessores = {
     medina = 1500;
   };
@@ -48,8 +43,7 @@ let
           name = professorName;
           value = {
             isNormalUser = true;
-            # professores novos sem uid fixo usam a alocação automática (>= 1000)
-            uid = uidsProfessores.${professorName} or null;
+            uid = uidsProfessores.${professorName} or null; # null = alocação automática (>= 1000)
             group = professorName;
             createHome = false;
             home = "${baseDir}/${professorName}";
@@ -132,10 +126,7 @@ in
 
           mkdir -p "$STUDENTS_BASE_DIR" "$SHARED_DIR"
 
-          # torne o dono do diretório do professor o próprio professor
-          # e o grupo do diretório como ${professorName}-group (para que alunos no grupo possam transitar)
-          # ATENÇÃO: NÃO usar -R no PROF_HOME — isso invadiria os diretórios dos alunos e trocaria o dono
-          # Em vez disso, aplica ownership recursivo só nos itens do professor, pulando students/
+          # NÃO usar -R no PROF_HOME: invadiria students/ e trocaria o dono dos alunos.
           chown "${professorName}:${professorName}-group" "$PROF_HOME"
           if [ ! -f "$PERMS_MARKER" ]; then
             for item in "$PROF_HOME"/*; do

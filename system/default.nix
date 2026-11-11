@@ -48,10 +48,9 @@
   # CPU: governor performance (prefere o boost máximo). Remova esta linha p/ voltar ao powersave.
   powerManagement.cpuFreqGovernor = "performance";
 
-  # Bump dos power limits do i5-1235U (valores em microwatts, uW).
-  # Padrões de fábrica: PL1 = 28000000 (28W) | PL2 = 42000000 (42W).
-  # Para mudar: edite os números. Para reverter: volte aos padrões OU comente/remova este serviço inteiro.
-  # Obs.: se o MSR estiver travado (mitigação Plundervolt), o echo falha silenciosamente (|| true).
+  # Bump dos power limits do i5-1235U (microwatts). Padrão de fábrica: PL1 28W | PL2 42W.
+  # Se o MSR estiver travado (mitigação Plundervolt) o echo falha silenciosamente.
+  # Para reverter: remova este serviço.
   systemd.services.cpu-power-bump = {
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {

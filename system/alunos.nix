@@ -6,6 +6,23 @@ let
     medina = [ "0549-6" "202512120026" "202412220014" "20211210030" "202412120031" "521-5" "ccemanuel" ];
   };
 
+  # UID fixo dos professores — TEM que ser >= 1000 para o usuário aparecer no
+  # LightDM: tanto o accounts-daemon (que o lightdm usa para listar usuários)
+  # quanto o /etc/lightdm/users.conf (minimum-uid=1000) descartam uid < 1000.
+  #
+  # O medina foi criado antes como isSystemUser e ganhou uid 982 (gravado em
+  # /var/lib/nixos/uid-map). Trocar para isNormalUser no nix NÃO muda o uid de
+  # uma conta já existente — o update-users-groups.pl só avisa "not applying UID
+  # change" — então a migração do uid foi feita uma vez na mão:
+  #   sudo usermod -u 1500 medina
+  #   sudo rm -f /mnt/sharefiles/.perms-initialized
+  #   sudo systemctl restart setup-data-dirs-and-acls.service   # refaz chown + ACLs
+  # Deixar o uid aqui evita reincidência (sem isto, uma recriação da conta pega
+  # uid novo do uid-map; fixado, ele é sempre >= 1000).
+  uidsProfessores = {
+    medina = 1500;
+  };
+
   # Re-aplica dono + ACL do professor (rode com sudo após mover arquivos via mv/root).
   fixAlunoPerms = pkgs.writeShellScriptBin "fix-aluno-perms" ''
     set -euo pipefail
@@ -30,7 +47,9 @@ let
         professorUser = {
           name = professorName;
           value = {
-            isSystemUser = true;
+            isNormalUser = true;
+            # professores novos sem uid fixo usam a alocação automática (>= 1000)
+            uid = uidsProfessores.${professorName} or null;
             group = professorName;
             createHome = false;
             home = "${baseDir}/${professorName}";

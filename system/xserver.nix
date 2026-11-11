@@ -10,6 +10,6 @@
     };
 
     displayManager.lightdm.enable = true;
-    desktopManager.cinnamon.enable = true;
+    desktopManager.xfce.enable = true;
   };
 }
